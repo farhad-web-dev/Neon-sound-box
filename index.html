@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERAUDIO // Project #27</title>
+    <style>
+        :root {
+            --bg-dark: #07090f;
+            --panel-bg: #0d121f;
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-purple: #9d00ff;
+            --text-main: #c0f0ff;
+            --border-glow: rgba(0, 243, 255, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 15px var(--border-glow);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 10px; height: 10px;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 8px var(--neon-cyan);
+        }
+
+        .title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-row svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--neon-cyan);
+            filter: drop-shadow(0 0 5px var(--neon-cyan));
+        }
+
+        h1 {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 0 8px var(--neon-cyan);
+        }
+
+        .subtitle {
+            font-size: 0.65rem;
+            color: #8ab4f8;
+            letter-spacing: 1px;
+        }
+
+        /* Master Unlock Audio Banner */
+        .unlock-banner {
+            background: linear-gradient(135deg, rgba(255,0,127,0.2), rgba(0,243,255,0.2));
+            border: 2px dashed var(--neon-pink);
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255,0,127,0.3);
+            transition: all 0.2s ease;
+        }
+
+        .unlock-banner:active {
+            transform: scale(0.97);
+            background: rgba(255,0,127,0.4);
+        }
+
+        .unlock-banner h2 {
+            font-size: 0.95rem;
+            color: #fff;
+            text-shadow: 0 0 8px var(--neon-pink);
+            margin-bottom: 4px;
+        }
+
+        .unlock-banner p {
+            font-size: 0.7rem;
+            color: var(--text-main);
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cyber-btn {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 5px rgba(0,243,255,0.2);
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 110px;
+            justify-content: center;
+        }
+
+        .cyber-btn:active, .cyber-btn.active {
+            background: var(--neon-cyan);
+            color: var(--bg-dark);
+            box-shadow: 0 0 12px var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        .cyber-btn.pink {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            box-shadow: 0 0 5px rgba(255,0,127,0.2);
+        }
+
+        .cyber-btn.pink:active, .cyber-btn.pink.active {
+            background: var(--neon-pink);
+            color: var(--bg-dark);
+            box-shadow: 0 0 12px var(--neon-pink);
+        }
+
+        /* Canvas Visualizer */
+        .visualizer-container {
+            background: #030407;
+            border: 1px solid var(--neon-cyan);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.15);
+            position: relative;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font-size: 0.6rem;
+            padding: 3px 6px;
+            background: rgba(0,243,255,0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 6px var(--neon-cyan);
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% { opacity: 0.2; }
+            50% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+
+        /* Settings Sub-panel */
+        .settings-grid {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+
+        .setting-row label {
+            color: #8ab4f8;
+            letter-spacing: 1px;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 4px;
+            flex: 2;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: transparent;
+            border: 1px solid rgba(0,243,255,0.3);
+            color: var(--text-main);
+            padding: 5px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .mode-btn.active {
+            border-color: var(--neon-cyan);
+            background: rgba(0,243,255,0.15);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 6px rgba(0,243,255,0.3);
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 60%;
+            height: 4px;
+            background: #1a233a;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 8px var(--neon-cyan);
+        }
+
+        /* Soundboard Grid */
+        .section-title {
+            font-size: 0.75rem;
+            color: var(--neon-pink);
+            letter-spacing: 2px;
+            margin-top: 4px;
+            text-shadow: 0 0 5px rgba(255,0,127,0.4);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .synth-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .synth-pad {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .synth-pad::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 3px; height: 100%;
+            background: var(--neon-cyan);
+        }
+
+        .synth-pad:nth-child(even)::before {
+            background: var(--neon-pink);
+        }
+
+        .synth-pad:active {
+            transform: scale(0.96);
+            background: rgba(0, 243, 255, 0.1);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--border-glow);
+        }
+
+        .pad-name {
+            font-size: 0.8rem;
+            color: #fff;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .pad-desc {
+            font-size: 0.6rem;
+            color: #78909c;
+        }
+
+        /* Footer Info */
+        .footer-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.55rem;
+            color: #455a64;
+            letter-spacing: 1px;
+            padding-top: 4px;
+            border-top: 1px solid #111827;
+        }
+
+        #audioFileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="title-row">
+                <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                <h1>CYBERAUDIO SYSTEM</h1>
+            </div>
+            <div class="subtitle">PROJECT #27 // AUDIO SYNTHESIZER & VISUALIZER</div>
+        </div>
+
+        <!-- Master Unlock Button (Essential for Mobile Browsers) -->
+        <div id="unlockBanner" class="unlock-banner" onclick="initAudioEngine()">
+            <h2>⚡ TAP TO INITIALIZE AUDIO ENGINE ⚡</h2>
+            <p>Required by mobile browsers to activate synthesizer & visualizer</p>
+        </div>
+
+        <!-- Main Controls -->
+        <div class="controls-panel">
+            <input type="file" id="audioFileInput" accept="audio/*">
+            <button class="cyber-btn" onclick="document.getElementById('audioFileInput').click()">
+                📂 Load Audio
+            </button>
+            <button id="micBtn" class="cyber-btn pink" onclick="toggleMic()">
+                🎙️ Mic Input
+            </button>
+            <button id="ambientBtn" class="cyber-btn" onclick="toggleAmbient()">
+                ✨ Ambient Pulse
+            </button>
+        </div>
+
+        <!-- Visualizer Display -->
+        <div class="visualizer-container">
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                <span id="statusText">ENGINE LOCKED</span>
+            </div>
+            <canvas id="vizCanvas"></canvas>
+        </div>
+
+        <!-- Settings Sub-panel -->
+        <div class="settings-grid">
+            <div class="setting-row">
+                <label>VISUALIZER MODE</label>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" onclick="setMode('ring', this)">Ring</button>
+                    <button class="mode-btn" onclick="setMode('bars', this)">Bars</button>
+                    <button class="mode-btn" onclick="setMode('wave', this)">Wave</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <label>MASTER VOLUME</label>
+                <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="updateVolume(this.value)">
+                <span id="volVal" style="font-size: 0.7rem; color: var(--neon-cyan);">80%</span>
+            </div>
+            <div class="setting-row">
+                <label>PULSE GAIN</label>
+                <input type="range" id="gainSlider" min="1" max="3" step="0.1" value="1.5" oninput="updateGain(this.value)">
+                <span id="gainVal" style="font-size: 0.7rem; color: var(--neon-pink);">1.5x</span>
+            </div>
+        </div>
+
+        <!-- Cyber Synth FX Grid -->
+        <div class="section-title">
+            <span>⚙️</span> CYBER SYNTH FX GRID
+        </div>
+        <div class="synth-grid">
+            <div class="synth-pad" onclick="playSynthSound('laser')">
+                <div class="pad-name">LASER BLAST</div>
+                <div class="pad-desc">Cyber Pew Pew</div>
+            </div>
+            <div class="synth-pad" onclick="playSynthSound('coin')">
+                <div class="pad-name">RETRO COIN</div>
+                <div class="pad-desc">Arcade Pickup</div>
+            </div>
+            <div class="synth-pad" onclick="playSynthSound('glitch')">
+                <div class="pad-name">GLITCH WARP</div>
+                <div class="pad-desc">Sci-Fi Stutter</div>
+            </div>
+            <div class="synth-pad" onclick="playSynthSound('sub')">
+                <div class="pad-name">SUB EXPLOSION</div>
+                <div class="pad-desc">Heavy Bass Drop</div>
+            </div>
+            <div class="synth-pad" onclick="playSynthSound('beep')">
+                <div class="pad-name">CYBER BEEP</div>
+                <div class="pad-desc">UI Click Signal</div>
+            </div>
+            <div class="synth-pad" onclick="playSynthSound('synth')">
+                <div class="pad-name">SYNTH PULSE</div>
+                <div class="pad-desc">80s Chord Pad</div>
+            </div>
+            <div class="synth-pad" onclick="playSynthSound('jump')">
+                <div class="pad-name">ARCADE JUMP</div>
+                <div class="pad-desc">Frequency Sweep</div>
+            </div>
+            <div class="synth-pad" onclick="playSynthSound('kick')">
+                <div class="pad-name">CYBER KICK</div>
+                <div class="pad-desc">Punchy Bass Hit</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-info">
+            <span>NEON AUDIO VISUALIZER</span>
+            <span>WEB AUDIO API</span>
+        </div>
+    </div>
+
+    <script>
+        let audioCtx = null;
+        let analyser = null;
+        let masterGain = null;
+        let audioElement = null;
+        let audioSourceNode = null;
+        let micStream = null;
+        let micSourceNode = null;
+        
+        let canvas = document.getElementById('vizCanvas');
+        let ctx = canvas.getContext('2d');
+        
+        let currentMode = 'ring';
+        let isEngineUnlocked = false;
+        let isAmbientActive = false;
+        let ambientOsc = null;
+        let pulseGainMultiplier = 1.5;
+
+        // Resize Canvas properly
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // 1. Initialize Audio Context (Must be triggered by user gesture)
+        function initAudioEngine() {
+            if (isEngineUnlocked) return;
+            
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.8;
+                
+                masterGain.connect(analyser);
+                analyser.connect(audioCtx.destination);
+
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                isEngineUnlocked = true;
+                document.getElementById('unlockBanner').style.display = 'none';
+                document.getElementById('statusText').innerText = 'SYSTEM READY // ONLINE';
+                
+                startVisualizerLoop();
+                console.log("Audio Engine Initialized Successfully");
+            } catch (e) {
+                alert("Audio Context Error: " + e.message);
+            }
+        }
+
+        // Volume & Gain Sliders
+        function updateVolume(val) {
+            document.getElementById('volVal').innerText = val + '%';
+            if (masterGain) {
+                masterGain.gain.value = val / 100;
+            }
+        }
+
+        function updateGain(val) {
+            pulseGainMultiplier = parseFloat(val);
+            document.getElementById('gainVal').innerText = val + 'x';
+        }
+
+        function setMode(mode, btn) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // 2. Synthesized Sound Effects Engine
+        function playSynthSound(type) {
+            if (!isEngineUnlocked) {
+                initAudioEngine();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            let now = audioCtx.currentTime;
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(masterGain);
+
+            if (type === 'laser') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.25);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'coin') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(987.77, now); // B5
+                osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'glitch') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.setValueAtTime(600, now + 0.05);
+                osc.frequency.setValueAtTime(300, now + 0.1);
+                osc.frequency.setValueAtTime(900, now + 0.15);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+                osc.start(now);
+                osc.stop(now + 0.22);
+            } else if (type === 'sub') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.5);
+                gain.gain.setValueAtTime(0.8, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'beep') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'synth') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(440, now + 0.2);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'jump') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.3);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'kick') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+                gain.gain.setValueAtTime(0.7, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+        }
+
+        // 3. Audio File Upload Handling
+        document.getElementById('audioFileInput').addEventListener('change', function(e) {
+            let file = e.target.files[0];
+            if (!file) return;
+
+            if (!isEngineUnlocked) initAudioEngine();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (audioElement) {
+                audioElement.pause();
+                audioElement = null;
+            }
+
+            let fileURL = URL.createObjectURL(file);
+            audioElement = new Audio(fileURL);
+            audioElement.crossOrigin = "anonymous";
+            audioElement.loop = true;
+
+            if (audioSourceNode) {
+                try { audioSourceNode.disconnect(); } catch(err){}
+            }
+
+            audioSourceNode = audioCtx.createMediaElementSource(audioElement);
+            audioSourceNode.connect(masterGain);
+
+            audioElement.play().then(() => {
+                document.getElementById('statusText').innerText = 'PLAYING: ' + file.name.substring(0, 15) + '...';
+            }).catch(err => {
+                alert("Playback error: " + err);
+            });
+        });
+
+        // 4. Microphone Input
+        async function toggleMic() {
+            if (!isEngineUnlocked) initAudioEngine();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            let micBtn = document.getElementById('micBtn');
+
+            if (micStream) {
+                micStream.getTracks().forEach(track => track.stop());
+                micStream = null;
+                if (micSourceNode) micSourceNode.disconnect();
+                micBtn.classList.remove('active');
+                document.getElementById('statusText').innerText = 'SYSTEM READY // ONLINE';
+                return;
+            }
+
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                micSourceNode = audioCtx.createMediaStreamSource(micStream);
+                // Mute mic output to speakers to prevent heavy feedback loop, connect directly to analyser
+                let muteGain = audioCtx.createGain();
+                muteGain.gain.value = 0;
+                micSourceNode.connect(muteGain);
+                muteGain.connect(masterGain); 
+                
+                micSourceNode.connect(analyser);
+                micBtn.classList.add('active');
+                document.getElementById('statusText').innerText = 'LIVE MIC FEED ACTIVE';
+            } catch (err) {
+                alert("Microphone permission denied or unavailable.");
+            }
+        }
+
+        // 5. Ambient Pulse Background Synth
+        function toggleAmbient() {
+            if (!isEngineUnlocked) initAudioEngine();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            let ambientBtn = document.getElementById('ambientBtn');
+
+            if (isAmbientActive) {
+                if (ambientOsc) {
+                    ambientOsc.stop();
+                    ambientOsc.disconnect();
+                    ambientOsc = null;
+                }
+                isAmbientActive = false;
+                ambientBtn.classList.remove('active');
+                return;
+            }
+
+            ambientOsc = audioCtx.createOscillator();
+            let ambientGain = audioCtx.createGain();
+            
+            ambientOsc.type = 'sawtooth';
+            ambientOsc.frequency.value = 55; // Low A note
+            
+            // Add LFO filter modulation for cyberpunk drone effect
+            let filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 300;
+
+            ambientOsc.connect(filter);
+            filter.connect(ambientGain);
+            ambientGain.connect(masterGain);
+
+            ambientGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            ambientOsc.start();
+
+            isAmbientActive = true;
+            ambientBtn.classList.add('active');
+        }
+
+        // 6. Visualizer Render Loop
+        function startVisualizerLoop() {
+            let bufferLength = analyser.frequencyBinCount;
+            let dataArray = new Uint8Array(bufferLength);
+
+            function render() {
+                requestAnimationFrame(render);
+                analyser.getByteFrequencyData(dataArray);
+
+                ctx.fillStyle = '#030407';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                let cx = canvas.width / 2;
+                let cy = canvas.height / 2;
+
+                // Calculate average volume for reactivity
+                let sum = 0;
+                for(let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                }
+                let avg = sum / bufferLength;
+
+                if (currentMode === 'ring') {
+                    // Ring Pulse Mode
+                    let radius = 40 + (avg * pulseGainMultiplier);
+                    
+                    // Outer Cyan Ring
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#00f3ff';
+                    ctx.lineWidth = 2;
+                    ctx.shadowColor = '#00f3ff';
+                    ctx.shadowBlur = 15;
+                    ctx.stroke();
+
+                    // Inner Pink Ring
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius * 0.7, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#ff007f';
+                    ctx.lineWidth = 1.5;
+                    ctx.shadowColor = '#ff007f';
+                    ctx.shadowBlur = 10;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+
+                } else if (currentMode === 'bars') {
+                    // Frequency Bars Mode
+                    let barWidth = (canvas.width / bufferLength) * 2.5;
+                    let barHeight;
+                    let x = 0;
+
+                    for(let i = 0; i < bufferLength; i++) {
+                        barHeight = (dataArray[i] / 255) * canvas.height * 0.8 * pulseGainMultiplier;
+
+                        let gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+                        gradient.addColorStop(0, '#00f3ff');
+                        gradient.addColorStop(1, '#ff007f');
+
+                        ctx.fillStyle = gradient;
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
+
+                        x += barWidth + 1;
+                    }
+
+                } else if (currentMode === 'wave') {
+                    // Waveform Line Mode
+                    let timeData = new Uint8Array(bufferLength);
+                    analyser.getByteTimeDomainData(timeData);
+
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = '#00f3ff';
+                    ctx.shadowColor = '#00f3ff';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath();
+
+                    let sliceWidth = canvas.width * 1.0 / bufferLength;
+                    let x = 0;
+
+                    for(let i = 0; i < bufferLength; i++) {
+                        let v = timeData[i] / 128.0;
+                        let y = v * cy;
+
+                        if(i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                        x += sliceWidth;
+                    }
+
+                    ctx.lineTo(canvas.width, cy);
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            render();
+        }
+    </script>
+</body>
+</html>
